@@ -56,6 +56,12 @@ bool talking = false; //indicates whether the fish should be talking or not
 int tailState = 0;
 int headState = 0;
 
+int state_move_tail = 0;
+int state_move_mouth = 0;
+
+int time_moving_mouth = 0;
+int time_moving_tail = 0;
+
 int yapping = false;
 int flapping = false;
 
@@ -168,40 +174,88 @@ void Tail(){}
 }
 
 void moveMouth(){
-  if (yapping) {
-
-    mouthMotor.halt();
-    mouthMotor.setSpeed(100);    
-    mouthMotor.forward();
-    delay(1000);
-    mouthMotor.halt();
-    mouthMotor.backward();
-    delay(1000);
-    mouthMotor.halt();
-
-  } else {
-    
-    mouthMotor.halt()
   
+  switch state_move_mouth {
+
+    time_moving_mouth = time_moving_mouth + 1; // probably needs to be an absolute number instead of counter
+
+    case 0: // waiting
+
+      time_moving_mouth = 0;
+
+      if (yapping){
+
+        mouthMotor.setSpeed(100);    
+        mouthMotor.forward();
+
+        state_move_mouth = 1;
+
+      }
+
+    case 1: // opening
+
+      if (time_moving_mouth > 500){
+        
+        mouthMotor.halt();    
+        mouthMotor.backward();
+
+        state_move_mouth = 2;
+
+      }
+
+    case 2: // closing
+
+      if (time_moving_mouth > 1000){
+        
+        mouthMotor.halt();    
+        mouthMotor.setSpeed(0);
+
+        state_move_mouth = 0;
+
+      }
   }
+
 }
 
 void moveTail(){
-  if (flapping) {
 
-    bodyMotor.halt();
-    bodyMotor.setSpeed(100);    
-    bodyMotor.forward();
-    delay(1000);
-    bodyMotor.halt();
-    bodyMotor.backward();
-    delay(1000);
-    bodyMotor.halt();
-
-  } else {
-    
-    bodyMotor.halt()
   
+    time_moving_tail = time_moving_tail + 1; // probably needs to be an absolute number instead of counter
+
+    case 0: // waiting
+
+      time_moving_tail = 0;
+
+      if (yapping){
+
+        bodyMotor.setSpeed(100);    
+        bodyMotor.forward();
+
+        state_move_tail = 1;
+
+      }
+
+    case 1: // opening
+
+      if (time_moving_tail > 500){
+        
+        bodyMotor.halt();    
+        bodyMotor.backward();
+
+        state_move_tail = 2;
+
+      }
+
+    case 2: // closing
+
+      if (time_moving_tail > 1000){
+        
+        bodyMotor.halt();    
+        bodyMotor.setSpeed(0);
+
+        state_move_tail = 0;
+
+      }
   }
 }
 
