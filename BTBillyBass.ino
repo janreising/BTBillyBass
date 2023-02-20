@@ -105,7 +105,7 @@ void loop() {
 
 void Head(){
 
-  switch(headState) {
+  switch (headState) {
 
     case 0: // Start and Wait
 
@@ -139,9 +139,9 @@ void Head(){
 
 }
 
-void Tail(){}
+void Tail(){
 
-  switch(tailState) {
+  switch (tailState) {
 
     case 0: // Start and Wait
 
@@ -166,16 +166,18 @@ void Tail(){}
 
       }
     
-  case 2: // stop motion
+    case 2: // stop motion
 
-    flapping = false;
-    tailState = 0; 
+      flapping = false;
+      tailState = 0; 
+
+  }
 
 }
 
 void moveMouth(){
   
-  switch state_move_mouth {
+  switch (state_move_mouth) {
 
     case 0: // waiting
 
@@ -216,6 +218,8 @@ void moveMouth(){
 }
 
 void moveTail(){
+
+  switch (state_move_tail) {
 
     case 0: // waiting
 
