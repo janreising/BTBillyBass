@@ -29,14 +29,35 @@
 MX1508 bodyMotor(6, 9); // Sets up an MX1508 controlled motor on PWM pins 6 and 9
 MX1508 mouthMotor(5, 3); // Sets up an MX1508 controlled motor on PWM pins 5 and 3
 
-int soundPin = A0; // Sound input
+bool debug = false;
 
-int silence = 12; // Threshold for "silence". Anything below this level is ignored.
+// SOUND INPUT
+int low_freq_pin = A1;
+int high_freq_pin = A2;
+
+int low_vol = 0;
+int high_vol = 0;
+
+int low_threshold = 10; // threshold for baseline
+int high_threshold = 10; // threshold for vocals
+
+// MOTOR VARIABLES
 int bodySpeed = 0; // body motor speed initialized to 0
-int soundVolume = 0; // variable to hold the analog audio value
-int fishState = 0; // variable to indicate the state Billy is in
 
+// ROLLING ARRAY VARIABLES
+
+// int counter = 0;
+// int arr[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+// FISH VARIABLES
+int fishState = 0; // variable to indicate the state Billy is in
 bool talking = false; //indicates whether the fish should be talking or not
+
+int tailState = 0;
+int headState = 0;
+
+int yapping = false;
+int flapping = false;
 
 //these variables are for storing the current time, scheduling times for actions to end, and when the action took place
 long currentTime;
@@ -45,26 +66,150 @@ long bodyActionTime;
 long lastActionTime;
 
 void setup() {
-//make sure both motor speeds are set to zero
+  
+  //make sure both motor speeds are set to zero
   bodyMotor.setSpeed(0); 
   mouthMotor.setSpeed(0);
 
-//input mode for sound pin
-  pinMode(soundPin, INPUT);
+  //input mode for sound pin
+  pinMode(low_freq_pin, INPUT);
+  pinMode(high_freq_pin, INPUT);
 
-  Serial.begin(9600);
+  if (debug) {
+
+    Serial.begin(9600);
+    Serial.print("Billy is running ...");
+
+  }
+  
 }
 
 void loop() {
   currentTime = millis(); //updates the time each time the loop is run
   updateSoundInput(); //updates the volume level detected
-  SMBillyBass(); //this is the switch/case statement to control the state of the fish
+  // SMBillyBass(); //this is the switch/case statement to control the state of the fish
+  
+  Head();
+  moveMouth();
+
+  Tail();
+  moveTail();
+
 }
 
+void Head(){
+
+  switch(headState) {
+
+    case 0: // Start and Wait
+
+      // threshold reached
+      if (high_vol > high_threshold) {
+
+        headState = 1;
+
+      }
+
+    case 1: // yapping
+
+      yapping = true;
+
+      if (high_vol > high_threshold) {
+
+        headState = 1; // stay in talking mode
+
+      } else {
+
+        headState = 2; // move to stop talking
+
+      }
+    
+  case 2: // stop motion
+
+    yapping = false;
+    headState = 0; 
+
+  }
+
+}
+
+void Tail(){}
+
+  switch(tailState) {
+
+    case 0: // Start and Wait
+
+      // threshold reached
+      if (low_vol > low_threshold) {
+
+        tailState = 1;
+
+      }
+
+    case 1: // flapping
+
+      flapping = true;
+
+      if (low_vol > low_threshold) {
+
+        tailState = 1; // stay in flapping mode
+
+      } else {
+
+        tailState = 2; // move to stop flapping
+
+      }
+    
+  case 2: // stop motion
+
+    flapping = false;
+    tailState = 0; 
+
+}
+
+void moveMouth(){
+  if (yapping) {
+
+    mouthMotor.halt();
+    mouthMotor.setSpeed(100);    
+    mouthMotor.forward();
+    delay(1000);
+    mouthMotor.halt();
+    mouthMotor.backward();
+    delay(1000);
+    mouthMotor.halt();
+
+  } else {
+    
+    mouthMotor.halt()
+  
+  }
+}
+
+void moveTail(){
+  if (flapping) {
+
+    bodyMotor.halt();
+    bodyMotor.setSpeed(100);    
+    bodyMotor.forward();
+    delay(1000);
+    bodyMotor.halt();
+    bodyMotor.backward();
+    delay(1000);
+    bodyMotor.halt();
+
+  } else {
+    
+    bodyMotor.halt()
+  
+  }
+}
+
+/*
 void SMBillyBass() {
   switch (fishState) {
     case 0: //START & WAITING
-      if (soundVolume > silence) { //if we detect audio input above the threshold
+      if (s2 > silence) { //if we detect audio input above the threshold
         if (currentTime > mouthActionTime) { //and if we haven't yet scheduled a mouth movement
           talking = true; //  set talking to true and schedule the mouth movement action
           mouthActionTime = currentTime + 100;
@@ -103,11 +248,42 @@ void SMBillyBass() {
       break;
   }
 }
+*/
 
 int updateSoundInput() {
-  soundVolume = analogRead(soundPin);
+
+  // read pins
+  low_vol = analogRead(low_freq_pin);
+  high_vol = analogRead(high_freq_pin);
+
+  if (debug) {
+
+    Serial.print(low_vol);
+    Serial.print(",");
+    Serial.println(high_vol);
+    
+  }
+
+  // rolling array
+  //if (counter > 20){
+  //  counter = 0;
+  //}
+
+  //arr[counter] = sV;
+  //counter = counter+1;
+
+  //soundVolume = average(arr, 20);
+
 }
 
+float average (int * array, int len) {  // assuming array is int.
+  long sum = 0L ;  // sum will be larger than an item, long for safety.
+  for (int i = 0 ; i < len ; i++)
+    sum += array [i] ;
+  return  ((float) sum) / len ;  // average will be fractional, so float may be appropriate.
+}
+
+/*
 void openMouth() {
   mouthMotor.halt(); //stop the mouth motor
   mouthMotor.setSpeed(220); //set the mouth motor speed
@@ -162,10 +338,10 @@ void articulateBody(bool talking) { //function for articulating the body
   }
 }
 
-
 void flap() {
   bodyMotor.setSpeed(180); //set the body motor to full speed
   bodyMotor.backward(); //move the body motor to raise the tail
   delay(500); //wait a bit, for dramatic effect
   bodyMotor.halt(); //halt the motor
 }
+*/
