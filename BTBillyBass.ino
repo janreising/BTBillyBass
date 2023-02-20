@@ -59,8 +59,8 @@ int headState = 0;
 int state_move_tail = 0;
 int state_move_mouth = 0;
 
-int time_moving_mouth = 0;
-int time_moving_tail = 0;
+int time_mouth_init = 0;
+int time_tail_init = 0;
 
 int yapping = false;
 int flapping = false;
@@ -177,11 +177,9 @@ void moveMouth(){
   
   switch state_move_mouth {
 
-    time_moving_mouth = time_moving_mouth + 1; // probably needs to be an absolute number instead of counter
-
     case 0: // waiting
 
-      time_moving_mouth = 0;
+      time_mouth_init = currentTime;
 
       if (yapping){
 
@@ -194,7 +192,7 @@ void moveMouth(){
 
     case 1: // opening
 
-      if (time_moving_mouth > 500){
+      if (currentTime - time_mouth_init > 500){
         
         mouthMotor.halt();    
         mouthMotor.backward();
@@ -205,7 +203,7 @@ void moveMouth(){
 
     case 2: // closing
 
-      if (time_moving_mouth > 1000){
+      if (currentTime - time_mouth_init > 1000){
         
         mouthMotor.halt();    
         mouthMotor.setSpeed(0);
@@ -219,12 +217,9 @@ void moveMouth(){
 
 void moveTail(){
 
-  
-    time_moving_tail = time_moving_tail + 1; // probably needs to be an absolute number instead of counter
-
     case 0: // waiting
 
-      time_moving_tail = 0;
+      time_tail_init = currentTime;
 
       if (yapping){
 
@@ -237,7 +232,7 @@ void moveTail(){
 
     case 1: // opening
 
-      if (time_moving_tail > 500){
+      if (currentTime - time_tail_init > 500){
         
         bodyMotor.halt();    
         bodyMotor.backward();
@@ -248,7 +243,7 @@ void moveTail(){
 
     case 2: // closing
 
-      if (time_moving_tail > 1000){
+      if (currentTime - time_tail_init > 1000){
         
         bodyMotor.halt();    
         bodyMotor.setSpeed(0);
